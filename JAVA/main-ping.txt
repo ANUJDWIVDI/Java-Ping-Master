@@ -1,0 +1,45 @@
+import java.io.*;
+import java.net.*;
+
+public class PingResponder implements Runnable {
+    private final int port;
+    private final String[] ipAddresses;
+
+    public PingResponder(int port, String[] ipAddresses) {
+        this.port = port;
+        this.ipAddresses = ipAddresses;
+    }
+
+    public void run() {
+        try {
+            ServerSocket serverSocket = new ServerSocket(port);
+            System.out.println("PingResponder listening on port " + port);
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                String inputLine = in.readLine();
+                System.out.println("Received ping from " + clientSocket.getInetAddress().getHostAddress() + ": " + inputLine);
+                clientSocket.close();
+
+                // Send pings to each IP address
+                for (String ipAddress : ipAddresses) {
+                    InetAddress address = InetAddress.getByName(ipAddress);
+                    System.out.println("Sending ping to " + address.getHostAddress());
+                    PingSender.sendPing(address);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        // Define the list of IP addresses to ping
+        String[] ipAddresses = {"192.168.1.1", "192.168.1.2", "192.168.1.3", "192.168.1.4", "192.168.1.5", "192.168.1.6", "192.168.1.7", "192.168.1.8", "192.168.1.9", "192.168.1.10"};
+
+        // Start the PingResponder on port 8080
+        Thread thread = new Thread(new PingResponder(8080, ipAddresses));
+        thread.start();
+    }
+}
